@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.maximbravo.chongo2.MainActivityWear">
+
+    <Button
+        android:id="@+id/start_button"
+        android:layout_centerInParent="true"
+        android:layout_width="wrap_content"
+        android:text="Start"
+        android:layout_height="wrap_content"
+        tools:layout_editor_absoluteY="231dp"
+        tools:layout_editor_absoluteX="148dp" />
+
+    <Button
+        android:id="@+id/open_file"
+        android:layout_below="@+id/start_button"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:text="Open File"
+        android:layout_height="wrap_content"
+        tools:layout_editor_absoluteY="231dp"
+        tools:layout_editor_absoluteX="148dp" />
+</RelativeLayout>
