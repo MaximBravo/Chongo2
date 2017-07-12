@@ -27,7 +27,12 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
         if (MyService.mGoogleApiClient.isConnected()) {
             PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(Constants.CHARACTER_PATH);
 
-            Word randomWord = Utils.getRandom(Utils.hsk1);
+            Word randomWord;
+            if (Utils.personal) {
+                randomWord = Utils.getRandom(Utils.personalDeck);
+            } else {
+                randomWord = Utils.getRandom(Utils.hsk1);
+            }
             putDataMapRequest.getDataMap().putInt(Constants.LEVEL_KEY, randomWord.getLevel());
             putDataMapRequest.getDataMap().putString(Constants.CHARACTER_KEY, randomWord.getCharacter());
             putDataMapRequest.getDataMap().putString(Constants.PIYIN_KEY, randomWord.getPinyin());

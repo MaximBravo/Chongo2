@@ -24,6 +24,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".FileExtractor"/>
         <receiver android:name=".MyBroadcastReceiver"/>
 
         <service android:name=".MyService"/>

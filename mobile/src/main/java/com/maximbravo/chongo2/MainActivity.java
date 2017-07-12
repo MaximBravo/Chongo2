@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.Constants;
@@ -60,48 +61,51 @@ import java.util.TimerTask;
 import com.google.android.gms.drive.Drive;
 import static android.app.ActivityManager.*;
 
-public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+public class MainActivity extends AppCompatActivity
+//        implements
+//        GoogleApiClient.ConnectionCallbacks,
+//        GoogleApiClient.OnConnectionFailedListener
+{
 
     private static final String NUMBER_KEY = "number";
     private static final int RESOLUTION_CODE = 2345;
-
+    private TextView textView;
     private GoogleApiClient mGoogleApiClient;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Utils.context = this;
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Drive.API)
-                .addScope(Drive.SCOPE_FILE)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-        mGoogleApiClient.connect();
+        textView = (TextView) findViewById(R.id.name);
+        Intent i = getIntent();
+        if(i != null) {
+            if(i.hasExtra("name")) {
+                textView.setText(i.getStringExtra("name"));
+            }
+        }
+//        mGoogleApiClient = new GoogleApiClient.Builder(this)
+//                .addApi(Drive.API)
+//                .addScope(Drive.SCOPE_FILE)
+//                .addConnectionCallbacks(this)
+//                .addOnConnectionFailedListener(this)
+//                .build();
+//        mGoogleApiClient.connect();
         Button openFile = (Button) findViewById(R.id.open_file);
         openFile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openFile();
+                Intent intent = new Intent(getApplicationContext(), FileExtractor.class);
+                startActivity(intent);
             }
         });
         serviceStuff();
-        try {
-            filePicker();
-        } catch (IntentSender.SendIntentException e) {
-            e.printStackTrace();
-        }
-
-
         //this.stopService(service);
     }
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
-    }
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        mGoogleApiClient.connect();
+//    }
     private void serviceStuff() {
 
         final Intent service = new Intent(this, MyService.class);
@@ -126,117 +130,119 @@ public class MainActivity extends AppCompatActivity implements
         });
     }
 
-    private void printFileSystemStuff() throws IOException {
-//        String path = Environment.().getPath();
-//        System.out.println(path);
-//        File directory = new File(path);
-//        File[] files = directory.listFiles();
-//        //Log.i("Files", "Size: "+ files.length);
-//        if(files != null) {
-//            for (File f : files) {
-//                Log.i("Files", "FileName:" + f.getName());
-//            }
-//        }
-        FileInputStream in = openFileInput(new File("/sdcard/Download/DuChinese_2017-07-03_1499123459.csv").getAbsolutePath());
-        InputStreamReader inputStreamReader = new InputStreamReader(in);
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = bufferedReader.readLine()) != null) {
-            sb.append(line);
-        }
-        System.out.println(sb.toString());
-    }
+
 
     private boolean isServiceRunning() {
         ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)){
             if("com.maximbravo.chongo2.MyService".equals(service.service.getClassName())) {
-                Toast.makeText(this, "service is running", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "service stopped", Toast.LENGTH_SHORT).show();
                 return true;
             }
         }
-        Toast.makeText(this, "service stopped", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "service is running", Toast.LENGTH_SHORT).show();
         return false;
     }
 
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        System.out.println("connected!!!");
-        openFile();
-    }
-
-    private void openFile() {
-        System.out.println("mGoogleApiClient connected: " + mGoogleApiClient.isConnected());
-        Query query = new Query.Builder()
-                .addFilter(Filters.eq(SearchableField.MIME_TYPE, "text/plain"))
-                .build();
-        Drive.DriveApi.query(mGoogleApiClient, query)
-                .setResultCallback(metadataCallback);
-    }
-
-    final private ResultCallback<DriveApi.MetadataBufferResult> metadataCallback = new
-            ResultCallback<DriveApi.MetadataBufferResult>() {
-                @Override
-                public void onResult(DriveApi.MetadataBufferResult result) {
-                    if (!result.getStatus().isSuccess()) {
-                        Log.e("Mainacivity","Problem while retrieving results");
-                        return;
-                    }
-
-                }
-            };
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-    private int REQ_OPEN = 999;
-    private void filePicker() throws IntentSender.SendIntentException {
-        if (mGoogleApiClient.isConnected()) {
-            IntentSender i = Drive.DriveApi
-                    .newOpenFileActivityBuilder()
-                    .build(mGoogleApiClient);
-
-            startIntentSenderForResult(i, REQ_OPEN, null, 0, 0, 0);
-
-        }
-    }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == REQ_OPEN) {
-            if(resultCode == RESULT_OK) {
-                System.out.println("FilePicker ok");
-                DriveId driveId = (DriveId) data.getParcelableExtra(
-                        OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
-                System.out.println(driveId.encodeToString());
-            }
-        }
-
-        if(requestCode == RESOLUTION_CODE) {
-            System.out.println("in activityResult");
-            if(resultCode == RESULT_OK) {
-                System.out.println("Result ok");
-                mGoogleApiClient.connect();
-            } else if (resultCode == RESULT_FIRST_USER) {
-                System.out.println("First User");
-            } else if (resultCode == RESULT_CANCELED) {
-                System.out.println("Result Cancelled");
-                data.toString();
-            }
-        }
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        System.out.println("Connection failed");
-        if(connectionResult.hasResolution()) {
-            try {
-                connectionResult.startResolutionForResult(this, RESOLUTION_CODE);
-                System.out.println("Started resulutionfor result");
-            } catch (IntentSender.SendIntentException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+//    private void printFileSystemStuff() throws IOException {
+////        String path = Environment.().getPath();
+////        System.out.println(path);
+////        File directory = new File(path);
+////        File[] files = directory.listFiles();
+////        //Log.i("Files", "Size: "+ files.length);
+////        if(files != null) {
+////            for (File f : files) {
+////                Log.i("Files", "FileName:" + f.getName());
+////            }
+////        }
+//        FileInputStream in = openFileInput(new File("/sdcard/Download/DuChinese_2017-07-03_1499123459.csv").getAbsolutePath());
+//        InputStreamReader inputStreamReader = new InputStreamReader(in);
+//        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+//        StringBuilder sb = new StringBuilder();
+//        String line;
+//        while ((line = bufferedReader.readLine()) != null) {
+//            sb.append(line);
+//        }
+//        System.out.println(sb.toString());
+//    }
+//
+//    @Override
+//    public void onConnected(@Nullable Bundle bundle) {
+//        System.out.println("connected!!!");
+//        openFile();
+//    }
+//
+//    private void openFile() {
+//        System.out.println("mGoogleApiClient connected: " + mGoogleApiClient.isConnected());
+//        Query query = new Query.Builder()
+//                .addFilter(Filters.eq(SearchableField.MIME_TYPE, "text/plain"))
+//                .build();
+//        Drive.DriveApi.query(mGoogleApiClient, query)
+//                .setResultCallback(metadataCallback);
+//    }
+//
+//    final private ResultCallback<DriveApi.MetadataBufferResult> metadataCallback = new
+//            ResultCallback<DriveApi.MetadataBufferResult>() {
+//                @Override
+//                public void onResult(DriveApi.MetadataBufferResult result) {
+//                    if (!result.getStatus().isSuccess()) {
+//                        Log.e("Mainacivity","Problem while retrieving results");
+//                        return;
+//                    }
+//
+//                }
+//            };
+//    @Override
+//    public void onConnectionSuspended(int i) {
+//
+//    }
+//    private int REQ_OPEN = 999;
+//    private void filePicker() throws IntentSender.SendIntentException {
+//        if (mGoogleApiClient.isConnected()) {
+//            IntentSender i = Drive.DriveApi
+//                    .newOpenFileActivityBuilder()
+//                    .build(mGoogleApiClient);
+//
+//            startIntentSenderForResult(i, REQ_OPEN, null, 0, 0, 0);
+//
+//        }
+//    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        if(requestCode == REQ_OPEN) {
+//            if(resultCode == RESULT_OK) {
+//                System.out.println("FilePicker ok");
+//                DriveId driveId = (DriveId) data.getParcelableExtra(
+//                        OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
+//                System.out.println(driveId.encodeToString());
+//            }
+//        }
+//
+//        if(requestCode == RESOLUTION_CODE) {
+//            System.out.println("in activityResult");
+//            if(resultCode == RESULT_OK) {
+//                System.out.println("Result ok");
+//                mGoogleApiClient.connect();
+//            } else if (resultCode == RESULT_FIRST_USER) {
+//                System.out.println("First User");
+//            } else if (resultCode == RESULT_CANCELED) {
+//                System.out.println("Result Cancelled");
+//                data.toString();
+//            }
+//        }
+//    }
+//
+//    @Override
+//    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+//        System.out.println("Connection failed");
+//        if(connectionResult.hasResolution()) {
+//            try {
+//                connectionResult.startResolutionForResult(this, RESOLUTION_CODE);
+//                System.out.println("Started resulutionfor result");
+//            } catch (IntentSender.SendIntentException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 }

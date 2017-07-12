@@ -48,7 +48,10 @@ public class DisplayActivity extends Activity {
         final Intent contentIntent = getIntent();
         if(contentIntent != null) {
             character.setText(contentIntent.getStringExtra(Constants.CHARACTER_KEY));
-            level.setText("" + contentIntent.getIntExtra(Constants.LEVEL_KEY, 0));
+            int levelInteger = contentIntent.getIntExtra(Constants.LEVEL_KEY, -1);
+            if(levelInteger > 0) {
+                level.setText("" + levelInteger);
+            }
             relativeLayout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

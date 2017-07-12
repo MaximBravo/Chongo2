@@ -34,7 +34,11 @@ public class MyService extends Service implements
     @Override
     public void onCreate() {
         super.onCreate();
-        Utils.extractAll();
+        if(Utils.personal) {
+            Utils.extractAllPersonal();
+        } else {
+            Utils.extractAll();
+        }
         mGoogleApiClient = new GoogleApiClient.Builder(this)
 //                .enableAutoManage(this /* MainActivity */,
 //                        this /* OnConnectionFailedListener */)

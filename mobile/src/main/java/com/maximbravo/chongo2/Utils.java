@@ -1,6 +1,7 @@
 package com.maximbravo.chongo2;
 
 import android.content.Context;
+import android.content.Intent;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -10,6 +11,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 
+import static android.support.v4.content.ContextCompat.startActivity;
+
 /**
  * Created by Maxim Bravo on 7/3/2017.
  */
@@ -17,13 +20,15 @@ public class Utils {
     public static ArrayList<Word> hsk1;
     public static ArrayList<Word> hsk2;
     public static ArrayList<Word> hsk3;
+    public static String personalFileString;
+    public static ArrayList<Word> personalDeck;
     public static int frequency = 1;
     public static String title = "么";
     public static int level = 1;
     public static String pinyin = "me";
     public static String definition = "what; particle for questions; question particle";
     public static Context context;
-
+    public static boolean personal = false;
     public static int selectedRadio;
     public static boolean hsk1pref = false;
     public static boolean hsk2pref = false;
@@ -31,6 +36,59 @@ public class Utils {
     public static void print(Context context, String msg) {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
+
+    public static void extractAllPersonal() {
+        personalDeck = new ArrayList<>();
+        String parseString = personalFileString;
+        parseString = parseString.substring(parseString.indexOf("ing") + 4, parseString.length());
+        if(parseString != null) {
+            int skip = 4;
+            int numOfColumns = 4;
+            ArrayList<String> allParts = new ArrayList<>();
+            String rollingPart = "";
+            boolean findingClosingQuote = false;
+            for (int i = 0; i < parseString.length(); i++) {
+                char current = parseString.charAt(i);
+                if (current == ',') {
+                    allParts.add(rollingPart);
+                    rollingPart = "";
+                    findingClosingQuote = false;
+                } else if(current == '\n') {
+                    if(findingClosingQuote) {
+                        rollingPart += " ";
+                    } else {
+                        allParts.add(rollingPart);
+                        rollingPart = "";
+                        findingClosingQuote = false;
+                    }
+                } else if (current == '\"') {
+                    if(findingClosingQuote) {
+                        findingClosingQuote = false;
+                    } else {
+                        findingClosingQuote = true;
+                    }
+                } else {
+                    rollingPart += current;
+                }
+
+            }
+
+//            for(int i = 0; i < allParts.size(); i++) {
+//                System.out.println(allParts.get(i));
+//            }
+            for (int i = 0; i < allParts.size(); i += numOfColumns) {
+                String simplified = allParts.get(i);
+                String traditional = allParts.get(i + 1);
+                String pinyin = allParts.get(i + 2);
+                String definition = allParts.get(i + 3);
+
+                Word word = new Word(simplified, pinyin, definition, "-1");
+                personalDeck.add(word);
+
+            }
+        }
+    }
+
 
     public static void extractAll(){
         hsk1 = new ArrayList<>();
